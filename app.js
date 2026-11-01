@@ -131,18 +131,39 @@ function draw(time){const t=state.motion?time/1000:0;if(state.screen==='home'){c
 function loop(time){frame=null;if(document.hidden)return;if(time-lastFrame>=(state.screen==='studio'?50:33)){draw(time);lastFrame=time;}if((state.motion||stream||capturePending)&&(state.screen==='home'||state.screen==='studio'))frame=requestAnimationFrame(loop);}
 function schedule(){if(frame)cancelAnimationFrame(frame);frame=null;draw(performance.now());if(!document.hidden&&(state.motion||stream||capturePending)&&(state.screen==='home'||state.screen==='studio'))frame=requestAnimationFrame(loop);}
 async function share(result){if(navigator.share){try{await navigator.share({title:'관상 연구소',text:result?resultData().name+' · '+resultData().subtitle+' — 사진 속 선과 비율의 시각 유형':'입체 격자와 열화상으로 만나는 나의 얼굴 지도',url:SITE});return;}catch(e){if(e.name==='AbortError')return;}}toast(await copy(result?plainText():SITE)?'공유할 내용을 복사했어요.':'주소창의 링크를 복사해 주세요.');}
-function updatePrompt(){const ch=resultData();$('gemini-prompt').value=[
- '당신은 한국어 교육·문화 잡지의 아트 디렉터이자 인포그래픽 편집 디자이너입니다. 아래 자료를 바탕으로 고등학생이 읽기 쉬운, 상업 출판물에 실을 수 있을 정도로 정돈된 한 장짜리 시각 리포트를 제작해 주세요.',
- '[프로젝트] 관상 연구소 / VISUAL PORTRAIT ATLAS',
- '[입력 자료]\n시각 유형: '+ch.name+' / '+ch.subtitle+'\n관찰 설명: '+ch.overview+'\n제작 활동: '+ch.advice+'\n마무리 문장: '+ch.hope+'\n추가 주제: '+($('topic').value.trim()||'열화상과 입체 격자로 표현하는 나만의 디지털 자화상'),
- '[해석 범위] 이것은 사진의 선과 비율을 예술적으로 이름 붙인 시각 유형입니다. 성격·지능·능력·감정·건강·운세를 외모에서 추론하지 마세요. 사진·얼굴 좌표·실제 측정 수치는 제공하지 않습니다. 없는 수치·백분위·신뢰도·과학적 근거를 만들지 마세요. 정량 자료가 없으므로 통계 그래프 대신 선·면·도형의 개념도를 사용하세요.',
- '[판형과 그리드] A4 세로 210×297mm, 사방 14mm 안전 여백, 2단 그리드, 단 사이 7mm. 위 18%는 제목·한 줄 요약, 중앙 52%는 대표 도해와 관찰 표, 아래 24%는 3단계 제작 활동과 짧은 메시지, 마지막 6%는 주석·저작권으로 구성하세요. 모바일 요약은 세로 1080×1920px, 1단으로 재배치해 주세요. 작은 글씨로 내용을 억지로 채우지 마세요.',
- '[정보 계층] ① 제목 12자 내외 ② 리드 45자 이내 ③ 윤곽·눈선·중심선·입선의 개념 도해 ④ 관찰 요소/시각 표현/작품 적용의 3열 표 ⑤ 직접 해보는 3단계 ⑥ 60자 이내의 따뜻한 마무리. 한 문단 2~3문장, 카드당 본문 80자 안팎. 제목·도해·표·활동이 중복 설명하지 않게 편집하세요.',
- '[비주얼] 아이보리 #FAF9F3 바탕, 짙은 청록 #173B36 본문, 골드 #9C773B 강조. 열화상 보라 #69188E·주황 #FF7726·노랑 #FFF199는 대표 도해에만 쓰고, 글자는 고대비로 유지하세요. 얼굴 도해는 특정 인물 사진 대신 추상적인 선과 점, 입체 와이어프레임으로 만드세요. 격자·랜드마크·곡선을 3단계로 시각화하고 작은 범례를 넣으세요. 기성 브랜드·작가의 고유 스타일·타인의 사진·캐릭터·로고를 모방하거나 삽입하지 마세요.',
- '[타이포그래피] 한국어 제목은 명조 계열, 본문·표는 가독성 높은 고딕 계열. A4 기준 제목 26~32pt, 소제목 14~17pt, 본문 11.5~13pt, 주석 최소 9pt, 행간 1.6~1.8. 모바일 본문 최소 32px. 표는 옅은 행 구분선과 충분한 셀 여백을 사용하고 줄바꿈·고아행·잘림을 점검하세요. 실제 사용 글꼴의 상업 이용 라이선스는 출판 전 확인 항목으로 남겨 주세요.',
- '[반드시 넣을 주석] 예술적 시각 분류이며 성격·능력·건강·운세를 판단하지 않습니다. 촬영 조건에 따라 달라질 수 있습니다.\n[푸터 원문] copyright ⓒ math-tong All right reserved.',
- '[요청 결과물] 먼저 6개 영역별 완성 원고를 표로 제시하세요. 이어서 도해·색상·범례·배치가 포함된 완성형 인포그래픽을 만들어 주세요. 파일 생성이 가능하면 외부 라이브러리·추적 코드 없이 한 파일로 열리는 인쇄용 HTML/CSS(A4·2단·인쇄 스타일 포함)와 편집 가능한 SVG를 제공하고, 글자가 선택 가능한 벡터 PDF로 출력할 수 있게 해 주세요. 이미지 생성만 가능한 경우 PNG 한 장과 정확한 한국어 원고를 따로 주세요. 파일을 직접 만들 수 없으면 가능하다고 주장하지 말고 복사해서 저장할 수 있는 전체 HTML 코드를 제공하세요. 마지막에는 줄바꿈·대비·수치 출처·저작권·인쇄 잘림의 실제 점검 결과와 남은 확인 사항을 짧게 적어 주세요.'
- ].join('\n\n');}
+function updatePrompt(){
+ const ch=resultData(),topic=$('topic').value.trim()||'열화상과 입체 격자로 표현하는 디지털 자화상';
+ const round=ch.name.includes('원형'),long=ch.name.includes('세로형'),angular=ch.name.includes('윤곽형');
+ const shape=round?'둥근 볼륨과 부드러운 턱의 흐름':long?'위아래로 이어지는 긴 볼륨':angular?'볼에서 턱으로 이어지는 분명한 면의 전환':'길게 흐르는 타원형 볼륨';
+ const emphasis=ch.subtitle.includes('중심선')?'이마에서 콧등을 지나 턱으로 이어지는 중심 능선':ch.subtitle.includes('눈선')?'양쪽 눈 주위로 감기는 곡면의 흐름':ch.subtitle.includes('입선')?'입 주변에서 볼과 턱으로 이어지는 곡면':'눈·코·입 주변의 선이 만나는 중앙 영역';
+ const context='시각 유형: '+ch.name+' / '+ch.subtitle+'\n관찰 설명: '+ch.overview+'\n작품 주제: '+topic;
+ const limits='개념적인 예술 도해입니다. 실제 사진·얼굴 좌표·측정값은 제공하지 않습니다. 수치, 통계 그래프, 신뢰도, 진단 결과를 만들지 마세요. 외모로 성격·능력·건강·운세를 추론하지 마세요.';
+ const footer='copyright ⓒ math-tong All right reserved.';
+ if($('gemini-mode').value==='print'){
+  $('gemini-prompt').value=[
+   '한국어 교육·문화 잡지의 편집 디자이너로서, 아래 내용의 인쇄용 HTML 파일 하나를 만들어 주세요. 최종 결과는 전체 HTML 코드 한 개로 제공하세요.',
+   context+'\n제작 활동: '+ch.advice+'\n마무리: '+ch.hope,
+   'A4 세로 210×297mm, 사방 14mm 여백, 2단 그리드와 7mm 단 간격. 제목 28pt, 본문 12pt, 행간 1.7, 주석 9pt 이상. 아이보리 #FAF9F3, 청록 #173B36, 골드 #9C773B. 휴대폰에서는 한 단으로 재배치하세요.',
+   '상단 제목과 요약, 중앙의 대표 얼굴 도해와 3열 관찰 표(관찰 요소/시각 표현/작품 적용), 하단의 격자→지점→곡선 제작 3단계와 짧은 메시지로 구성하세요. 인쇄시 한 페이지에 들어가도록 실제 분량과 여백을 조절하세요.',
+   '도해는 얼굴의 볼·콧등·눈두덩·턱 면이 읽히는 익명의 입체 얼굴을 인라인 SVG로 정교하게 묘사하세요. '+shape+'을 표현하고 '+emphasis+'을 강조하세요. 곡면을 감싸는 가로·세로 격자, 원근에 따라 작아지는 지점, 면의 명암과 부드러운 열화상 그라데이션을 사용하세요. 원·직선·삼각형을 조립한 평면 얼굴로 단순화하지 마세요.',
+   limits,
+   'CSS와 SVG를 모두 HTML 안에 포함하고 외부 라이브러리·외부 이미지·추적 코드 없이 열리게 하세요. 본문과 표는 실제 HTML 텍스트로 작성하여 PDF로 인쇄해도 글자를 선택할 수 있게 하세요. 가짜 다운로드 링크나 생성하지 않은 파일을 제시하지 마세요.',
+   '주석: 예술적 시각 분류이며 성격·능력·건강·운세를 판단하지 않습니다. 촬영 조건에 따라 달라질 수 있습니다.\n푸터 원문: '+footer,
+   '완성 전에 표의 줄바꿈·넘침·단 분리·색 대비·A4 인쇄 잘림을 점검하세요. 실제 사용할 글꼴과 기타 자산의 상업 이용 권한은 출판 전 별도로 확인할 수 있게 주석에 기록하세요.'
+  ].join('\n\n');return;
+ }
+ $('gemini-prompt').value=[
+  '이미지 생성 도구로 고등학생을 위한 고급 과학·문화 잡지의 인포그래픽 포스터 한 장을 만들어 주세요. 완성된 이미지 한 장을 최종 결과로 보여 주세요.',
+  '[형식] 9:16 세로, 1080×1920px 이상. 휴대폰 전체 화면에서 읽는 한 장짜리 완결형 포스터입니다. 평면의 완성 아트워크만 보여 주세요. 휴대폰 테두리·브라우저 화면·목업은 넣지 마세요.',
+  '[입력]\n'+context,
+  '[대표 비주얼 — 가장 중요] 화면의 약 60%를 차지하는 익명의 3D 가상 얼굴. 정면에서 약 15도 돌아간 얼굴의 눈두덩·볼·콧등·턱이 분명한 입체 면으로 읽혀야 합니다. '+shape+'을 표현하세요. '+emphasis+'에 빛을 모으세요. 실존 인물을 닮게 만들지 마세요.',
+  '[깊이와 재질] 얇은 반투명 얼굴 표면 위에 곡면을 감싸는 정밀한 가로·세로 격자를 입히세요. 격자에서 떨어져 떠 있는 작은 발광 지점, 그 지점을 잇는 곡선을 겹쳐 격자→지점→곡선의 세 층을 보여 주세요. 층은 약간 어긋나고 서로 겹치며 깊이·가림·부드러운 그림자가 생겨야 합니다. 열화상 보라 #69188E·주황 #FF7726·노랑 #FFF199가 얼굴 표면의 곡률을 따라 부드럽게 연결되게 하세요. 중심선은 얼굴 위를 흐르는 곡선으로 표현하세요.',
+  '[편집] 아이보리 #FAF9F3 여백에 짙은 청록 #173B36 제목, 골드 #9C773B의 작은 구분선. 위쪽에는 큰 제목과 짧은 부제만 두세요. 얼굴 도해에는 눈·코·입·윤곽의 짧은 한글 라벨을 지시선으로 연결하세요. 작은 범례에 격자/지점/곡선을 표시하세요. 아래에는 같은 크기의 제작 3단계 카드를 나란히 두세요. 본문은 휴대폰에서 읽기 쉬운 크기로 최소화하세요.',
+  '[이미지에 넣을 정확한 글자]\n브랜드: 관상 연구소\n제목: '+ch.name+'\n부제: '+ch.subtitle+' · 선으로 만드는 나의 얼굴 지도\n범례: 격자 / 지점 / 곡선\n카드 1: 격자 — 얼굴의 곡면을 따라\n카드 2: 지점 — 눈·코·입의 위치에 빛\n카드 3: 곡선 — 둥근 호로 이어 보기\n마무리: 내 이야기는 내가 만들어 가요.\n주석: 예술적 도해 · 실측 아님\n안내: 성격·능력·건강·운세를 판단하지 않습니다.\n푸터: '+footer,
+  '[피할 표현] 타원 테두리 안에 수평선·점·삼각형 코만 넣은 기초 도형 얼굴, 평평한 도식, 큰 단색 사각형 배경, 지나친 네온, 작은 글씨로 가득한 보고서, 긴 관찰 표, 가짜 수치와 온도 눈금, 실사 인물 사진, 기성 캐릭터·브랜드 모방.',
+  limits+' 한글의 오탈자·잘림을 점검하고 도해와 글자가 겹치지 않게 마감하세요. 원고 표·HTML·SVG·PDF 코드를 한 응답에 함께 요청하지 않습니다. 이미지 한 장의 구성과 시각적 완성도에 집중하세요.'
+ ].join('\n\n');
+}
 async function openGemini(){updatePrompt();const copied=await copy($('gemini-prompt').value);toast(copied?'프롬프트를 복사했어요. Gemini 대화창에 붙여넣어 주세요.':'질문 칸을 길게 눌러 복사한 뒤 Gemini에 붙여넣어 주세요.');window.open('https://gemini.google.com/app','_blank','noopener,noreferrer');}
 function saveImage(){
  if(!state.photo)return;finishTyping();drawStudio(0,'result-photo');
@@ -165,7 +186,7 @@ function init(){
  $('share-result').onclick=()=>share(true);$('copy-link').onclick=()=>share(false);$('copy-result').onclick=async()=>{finishTyping();toast(await copy(plainText())?'결과 전문을 복사했어요.':'텍스트를 복사하지 못했어요.');};$('print-result').onclick=()=>{finishTyping();window.print();};window.addEventListener('beforeprint',finishTyping);$('save-image').onclick=saveImage;$('finish-typing').onclick=finishTyping;$('replay-reading').onclick=()=>{unlockAudio();showResult();};
  $('typing-speed').onchange=e=>{state.typingDelay=Number(e.target.value);};$('pause-typing').onclick=()=>{if(!typingTimer)return;state.typingPaused=!state.typingPaused;$('pause-typing').textContent=state.typingPaused?'이어서 읽기':'잠시 멈춤';$('pause-typing').setAttribute('aria-pressed',String(state.typingPaused));$('screen-result').dataset.typing=state.typingPaused?'paused':'running';};
  $('output-layout').onchange=e=>{state.outputLayout=e.target.value;$('printable-result').dataset.layout=state.outputLayout;};
- $('topic').oninput=updatePrompt;$('open-gemini').onclick=openGemini;$('quick-gemini').onclick=openGemini;
+ $('topic').oninput=updatePrompt;$('gemini-mode').onchange=updatePrompt;$('open-gemini').onclick=openGemini;$('quick-gemini').onclick=openGemini;
  ['wheel','touchstart','pointerdown'].forEach(event=>window.addEventListener(event,()=>{if(typingTimer)followWriting=false;},{passive:true}));
  portrait.onload=schedule;portrait.onerror=()=>toast('일러스트를 불러오지 못했어요. 카메라로 이용해 주세요.');new ResizeObserver(schedule).observe($('main'));window.addEventListener('resize',schedule);
  document.addEventListener('visibilitychange',()=>{if(document.hidden){if(capturePending)captureFailed('촬영이 잠시 중단됐어요. 다시 찍어 주세요.');stopCamera();faceTracker.stop();if(frame)cancelAnimationFrame(frame);frame=null;}else{if(state.screen==='studio'){state.demo=true;$('camera-status').textContent='카메라가 멈췄어요 · 다시 켜 주세요';$('camera-toggle').textContent='내 카메라로 바꾸기';startFaceTracking();}schedule();}});window.addEventListener('pagehide',()=>{stopCamera();faceTracker.stop();});syncMotion();updatePrompt();
