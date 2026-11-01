@@ -3,7 +3,7 @@
 'use strict';
 const $=id=>document.getElementById(id),SITE='https://kwansang.vercel.app/';
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-const state={screen:'home',index:0,sound:true,motion:!reduced.matches,effects:{mesh:true,ink:false,thermal:true},yaw:0,zoom:1,photo:null,demo:true};
+const state={screen:'home',index:0,sound:true,motion:!reduced.matches,effects:{mesh:true,ink:false,thermal:true},yaw:0,zoom:1,typingDelay:110,typingPaused:false,outputLayout:'table',photo:null,demo:true};
 const portrait=new Image();portrait.src='assets/portrait.webp';
 const video=$('camera-video');
 let stream=null,cameraRequest=0,frame=null,lastFrame=0,revealTimer=null,typingTimer=null,toastTimer=null,audio=null,keyNoise=null,typingTargets=[],followWriting=true,lastFollowAt=0;
@@ -40,27 +40,31 @@ function completeCapture(face){
  catch(error){captureFailed(error.message);}
 }
 function resultData(){return state.photo?.profile||PhotoTypes.profiles[state.index];}
-function finishTyping(){clearInterval(typingTimer);typingTimer=null;typingTargets.forEach(target=>{target.el.textContent=target.text;target.el.removeAttribute('aria-busy');target.el.classList.remove('typing-cursor');target.block.classList.remove('is-writing','waiting-for-ink');});$('writing-status').hidden=true;$('typing-progress').style.width='100%';$('typing-meter').setAttribute('aria-valuenow','100');$('screen-result').dataset.typing='complete';}
+function finishTyping(){clearTimeout(typingTimer);typingTimer=null;state.typingPaused=false;$('pause-typing').disabled=true;$('pause-typing').textContent='잠시 멈춤';$('pause-typing').setAttribute('aria-pressed','false');typingTargets.forEach(target=>{target.el.textContent=target.text;target.el.removeAttribute('aria-busy');target.el.classList.remove('typing-cursor');target.block.classList.remove('is-writing','waiting-for-ink');});$('writing-status').hidden=true;$('typing-progress').style.width='100%';$('typing-meter').setAttribute('aria-valuenow','100');$('screen-result').dataset.typing='complete';}
 function startTyping(){
- clearInterval(typingTimer);typingTimer=null;followWriting=true;lastFollowAt=0;const total=typingTargets.reduce((n,target)=>n+Array.from(target.text).length,0);let section=0,cursor=0,written=0;
- const letters=typingTargets.map(target=>Array.from(target.text));typingTargets.forEach(target=>{target.el.textContent='';target.el.setAttribute('aria-busy','true');target.el.classList.remove('typing-cursor');target.block.classList.add('waiting-for-ink');target.block.classList.remove('is-writing');});
- $('writing-status').hidden=false;$('screen-result').dataset.typing='running';$('typing-progress').style.width='0%';$('typing-meter').setAttribute('aria-valuenow','0');
+ clearTimeout(typingTimer);typingTimer=null;state.typingPaused=false;followWriting=true;lastFollowAt=0;
+ const letters=typingTargets.map(target=>Array.from(target.text)),total=letters.reduce((n,list)=>n+list.length,0);let section=0,cursor=0,written=0;
+ typingTargets.forEach(target=>{target.el.textContent='';target.el.setAttribute('aria-busy','true');target.el.classList.remove('typing-cursor');target.block.classList.add('waiting-for-ink');target.block.classList.remove('is-writing');});
+ $('writing-status').hidden=false;$('screen-result').dataset.typing='running';$('typing-progress').style.width='0%';$('typing-meter').setAttribute('aria-valuenow','0');$('pause-typing').disabled=false;$('pause-typing').textContent='잠시 멈춤';$('pause-typing').setAttribute('aria-pressed','false');
  function enterSection(){const target=typingTargets[section];target.block.classList.remove('waiting-for-ink');target.block.classList.add('is-writing');target.el.classList.add('typing-cursor');$('typing-phase').textContent=target.phase;}
- enterSection();typingTimer=setInterval(()=>{
-  if(document.hidden)return;
-  const target=typingTargets[section],chars=letters[section],step=chars.length>900?8:2;cursor=Math.min(chars.length,cursor+step);target.el.textContent=chars.slice(0,cursor).join('');written=letters.slice(0,section).reduce((n,list)=>n+list.length,0)+cursor;
+ function next(){
+  if(document.hidden||state.typingPaused){typingTimer=setTimeout(next,120);return;}
+  const target=typingTargets[section],chars=letters[section];cursor=Math.min(chars.length,cursor+1);const char=chars[cursor-1]||'';target.el.textContent=chars.slice(0,cursor).join('');written++;
   const percent=Math.round(written/Math.max(1,total)*100);$('typing-progress').style.width=percent+'%';$('typing-meter').setAttribute('aria-valuenow',String(percent));
-  if(followWriting&&performance.now()-lastFollowAt>350){lastFollowAt=performance.now();const bottom=target.el.getBoundingClientRect().bottom;if(bottom>innerHeight-64)window.scrollBy({top:bottom-innerHeight+90,behavior:'smooth'});}
-  if(/\S/.test(chars[cursor-1]||''))tick(/[。.!?。]/.test(chars[cursor-1]||''));
-  if(cursor>=chars.length){target.el.classList.remove('typing-cursor');target.el.removeAttribute('aria-busy');target.block.classList.remove('is-writing');section++;cursor=0;tick(true);if(section>=typingTargets.length){finishTyping();return;}enterSection();}
- },38);
+  if(followWriting&&performance.now()-lastFollowAt>500){lastFollowAt=performance.now();const bottom=target.el.getBoundingClientRect().bottom;if(bottom>innerHeight-64)window.scrollBy({top:bottom-innerHeight+90,behavior:'smooth'});}
+  if(/\S/.test(char))tick(/[.!?。]/.test(char));let delay=state.typingDelay+(/[.!?。]/.test(char)?500:/[,，:：]/.test(char)?230:char==='\n'?380:0);
+  if(cursor>=chars.length){target.el.classList.remove('typing-cursor');target.el.removeAttribute('aria-busy');target.block.classList.remove('is-writing');section++;cursor=0;if(section>=typingTargets.length){finishTyping();return;}enterSection();delay=850;}
+  typingTimer=setTimeout(next,delay);
+ }
+ enterSection();typingTimer=setTimeout(next,state.typingDelay);
 }
 function showResult(animate=true){
  if(!state.photo){begin(false);return;}finishTyping();go('result');const ch=resultData();$('result-name').textContent=ch.name;$('result-code').textContent=state.photo.demo?'일러스트 데모의 시각 유형':'촬영 사진에서 찾은 시각 유형';$('result-subtitle').textContent=ch.subtitle;$('result-emblem').textContent=ch.glyph;$('result-number').textContent=String(state.index+1).padStart(2,'0')+' / 16';
  $('result-tags').replaceChildren(...[ch.subtitle,'478개 얼굴 지점','설문 없이 사진 분류'].map(text=>{const el=document.createElement('span');el.className='tag';el.textContent=text;return el;}));
  typingTargets=[];const target=(el,text,phase)=>{el.textContent=text;typingTargets.push({el,text,phase,block:el.closest('.reading-block')});};
  target($('reading-overview'),ch.overview,'사진에서 찾은 선과 비율');$('reading-items').replaceChildren();
- PhotoTypes.rows(state.photo,state.photo.demo).forEach(([label,text])=>{const row=document.createElement('div');row.className='map-row';const strong=document.createElement('strong');strong.textContent=label;const span=document.createElement('span');row.append(strong,span);$('reading-items').append(row);target(span,text,'사진 지점의 기록 · '+label);});
+ const table=document.createElement('table');table.className='observation-table';const caption=document.createElement('caption');caption.textContent='촬영 사진의 관찰 항목과 기록';const body=document.createElement('tbody');table.append(caption,body);$('reading-items').append(table);
+ PhotoTypes.rows(state.photo,state.photo.demo).forEach(([label,text])=>{const row=document.createElement('tr');const th=document.createElement('th');th.scope='row';th.textContent=label;const td=document.createElement('td');const span=document.createElement('span');td.append(span);row.append(th,td);body.append(row);target(span,text,'사진 지점의 기록 · '+label);});
  target($('reading-advice'),ch.advice,'나만의 얼굴 지도 그리기');target($('reading-hope'),ch.hope,'나에게 보내는 한마디');updatePrompt();drawStudio(0,'result-photo');if(animate)startTyping();else finishTyping();
 }
 function plainText(){if(!state.photo)return SITE;const ch=resultData();return ['관상 연구소 · '+ch.name+' / '+ch.subtitle,state.photo.demo?'일러스트 데모의 결과':'내 사진의 시각적 유형','','[사진의 선과 비율]',ch.overview,'',...PhotoTypes.rows(state.photo,state.photo.demo).map(([label,text])=>label+': '+text),'','[얼굴 지도 그리기]',ch.advice,'','[한마디]',ch.hope,'','시각적 분류이며 과학적 진단이 아닙니다. 촬영 각도·표정·거리·조명에 따라 결과가 달라질 수 있어요.','copyright ⓒ math-tong All right reserved.',SITE].join('\n');}
@@ -108,10 +112,10 @@ function drawFaceLandmarks(ctx,w,h,t,sw,sh,mirror,face=trackedFace){
  const line=(pairs,color,width)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();for(const [a,b]of pairs||[]){if(a*3+1>=points.length||b*3+1>=points.length)continue;const p=point(a),q=point(b);ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);}ctx.stroke();};
  ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();
  if(state.effects.mesh)line(connections.mesh,'rgba(142,237,255,.30)',.65);
- ctx.fillStyle='rgba(157,241,255,.43)';for(let i=0;i<points.length/3;i++){const p=point(i);ctx.beginPath();ctx.arc(p.x,p.y,.8,0,Math.PI*2);ctx.fill();}
+ ctx.fillStyle='rgba(157,241,255,.65)';for(let i=0;i<points.length/3;i++){const p=point(i);ctx.beginPath();ctx.arc(p.x,p.y,1.25,0,Math.PI*2);ctx.fill();}
  line(connections.oval,'rgba(159,244,255,.83)',1.2);line(connections.eyes,'rgba(226,255,255,.98)',1.5);line(connections.irises,'rgba(105,255,220,.98)',1.4);line(connections.brows,'rgba(255,223,142,.9)',1.3);line(connections.lips,'rgba(255,219,255,.98)',1.4);
  line([[168,6],[6,197],[197,195],[195,5],[5,4],[4,1],[1,2],[98,2],[2,327]],'rgba(211,255,247,.85)',1.1);
- const highlights=[10,21,251,54,284,234,454,172,397,152,33,133,160,158,144,153,263,362,385,387,373,380,70,63,105,300,293,334,168,6,197,4,1,2,98,327,61,291,13,14,0,17,78,308,468,473];for(const index of highlights){if(index*3+2>=points.length)continue;const p=point(index),pulse=state.motion?Math.sin(t*2.4+index)*.8:0;ctx.fillStyle='rgba(108,247,255,.18)';ctx.beginPath();ctx.arc(p.x,p.y,6+pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(p.x,p.y,2.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(126,245,255,.85)';ctx.lineWidth=.8;ctx.beginPath();ctx.arc(p.x,p.y,4.3+pulse,0,Math.PI*2);ctx.stroke();}
+ const highlights=[10,21,251,54,284,234,454,172,397,152,33,133,160,158,144,153,263,362,385,387,373,380,70,63,105,300,293,334,168,6,197,4,1,2,98,327,61,291,13,14,0,17,78,308,468,473];for(const index of highlights){if(index*3+2>=points.length)continue;const p=point(index),pulse=state.motion?Math.sin(t*2.4+index)*.8:0;ctx.fillStyle='rgba(108,247,255,.18)';ctx.beginPath();ctx.arc(p.x,p.y,8+pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(p.x,p.y,3.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(126,245,255,.85)';ctx.lineWidth=.8;ctx.beginPath();ctx.arc(p.x,p.y,5.6+pulse,0,Math.PI*2);ctx.stroke();}
  ctx.font='500 14px "Noto Sans KR", sans-serif';for(const [index,label,dx,dy]of [[33,'눈',-29,-14],[263,'눈',12,-14],[1,'코',12,6],[13,'입',14,18],[10,'윤곽',12,-12]]){const p=point(index),x=Math.max(5,Math.min(w-39,p.x+dx)),y=Math.max(21,Math.min(h-8,p.y+dy));ctx.fillStyle='rgba(6,16,35,.82)';ctx.fillRect(x-4,y-13,label.length*15+8,22);ctx.fillStyle='#d8ffff';ctx.fillText(label,x,y);}
  ctx.restore();
 }
@@ -127,14 +131,23 @@ function draw(time){const t=state.motion?time/1000:0;if(state.screen==='home'){c
 function loop(time){frame=null;if(document.hidden)return;if(time-lastFrame>=(state.screen==='studio'?50:33)){draw(time);lastFrame=time;}if((state.motion||stream||capturePending)&&(state.screen==='home'||state.screen==='studio'))frame=requestAnimationFrame(loop);}
 function schedule(){if(frame)cancelAnimationFrame(frame);frame=null;draw(performance.now());if(!document.hidden&&(state.motion||stream||capturePending)&&(state.screen==='home'||state.screen==='studio'))frame=requestAnimationFrame(loop);}
 async function share(result){if(navigator.share){try{await navigator.share({title:'관상 연구소',text:result?resultData().name+' · '+resultData().subtitle+' — 사진 속 선과 비율의 시각 유형':'입체 격자와 열화상으로 만나는 나의 얼굴 지도',url:SITE});return;}catch(e){if(e.name==='AbortError')return;}}toast(await copy(result?plainText():SITE)?'공유할 내용을 복사했어요.':'주소창의 링크를 복사해 주세요.');}
-function updatePrompt(){const ch=resultData();$('gemini-prompt').value=['고등학생을 위한 디지털 아트 활동 도우미로 답해 주세요.','관상 연구소에서 만든 시각적 표현 이름: '+ch.name+' / '+ch.subtitle,'이 이름은 사진 속 선의 모양을 예술적으로 분류한 표현이며, 성격·능력·건강·감정·미래를 뜻하지 않습니다. 사진이나 얼굴 좌표는 제공하지 않습니다.','이 표현을 모티브로 한 열화상 색상(보라·빨강·노랑)과 입체 격자 느낌의 자화상 제작 아이디어를 알려 주세요. 외모로 성격·운세·능력을 추측하거나 등급을 매기지 마세요.','관심 주제: '+($('topic').value.trim()||'나만의 디지털 자화상 만들기'),'[작품 콘셉트] [색상과 선] [제작 단계] [한마디] 네 제목으로, 큰 글씨로 읽기 좋은 짧은 문장과 존댓말을 사용해 주세요.'].join('\n\n');}
+function updatePrompt(){const ch=resultData();$('gemini-prompt').value=[
+ '당신은 한국어 교육·문화 잡지의 아트 디렉터이자 인포그래픽 편집 디자이너입니다. 아래 자료를 바탕으로 고등학생이 읽기 쉬운, 상업 출판물에 실을 수 있을 정도로 정돈된 한 장짜리 시각 리포트를 제작해 주세요.',
+ '[프로젝트] 관상 연구소 / VISUAL PORTRAIT ATLAS',
+ '[입력 자료]\n시각 유형: '+ch.name+' / '+ch.subtitle+'\n관찰 설명: '+ch.overview+'\n제작 활동: '+ch.advice+'\n마무리 문장: '+ch.hope+'\n추가 주제: '+($('topic').value.trim()||'열화상과 입체 격자로 표현하는 나만의 디지털 자화상'),
+ '[해석 범위] 이것은 사진의 선과 비율을 예술적으로 이름 붙인 시각 유형입니다. 성격·지능·능력·감정·건강·운세를 외모에서 추론하지 마세요. 사진·얼굴 좌표·실제 측정 수치는 제공하지 않습니다. 없는 수치·백분위·신뢰도·과학적 근거를 만들지 마세요. 정량 자료가 없으므로 통계 그래프 대신 선·면·도형의 개념도를 사용하세요.',
+ '[판형과 그리드] A4 세로 210×297mm, 사방 14mm 안전 여백, 2단 그리드, 단 사이 7mm. 위 18%는 제목·한 줄 요약, 중앙 52%는 대표 도해와 관찰 표, 아래 24%는 3단계 제작 활동과 짧은 메시지, 마지막 6%는 주석·저작권으로 구성하세요. 모바일 요약은 세로 1080×1920px, 1단으로 재배치해 주세요. 작은 글씨로 내용을 억지로 채우지 마세요.',
+ '[정보 계층] ① 제목 12자 내외 ② 리드 45자 이내 ③ 윤곽·눈선·중심선·입선의 개념 도해 ④ 관찰 요소/시각 표현/작품 적용의 3열 표 ⑤ 직접 해보는 3단계 ⑥ 60자 이내의 따뜻한 마무리. 한 문단 2~3문장, 카드당 본문 80자 안팎. 제목·도해·표·활동이 중복 설명하지 않게 편집하세요.',
+ '[비주얼] 아이보리 #FAF9F3 바탕, 짙은 청록 #173B36 본문, 골드 #9C773B 강조. 열화상 보라 #69188E·주황 #FF7726·노랑 #FFF199는 대표 도해에만 쓰고, 글자는 고대비로 유지하세요. 얼굴 도해는 특정 인물 사진 대신 추상적인 선과 점, 입체 와이어프레임으로 만드세요. 격자·랜드마크·곡선을 3단계로 시각화하고 작은 범례를 넣으세요. 기성 브랜드·작가의 고유 스타일·타인의 사진·캐릭터·로고를 모방하거나 삽입하지 마세요.',
+ '[타이포그래피] 한국어 제목은 명조 계열, 본문·표는 가독성 높은 고딕 계열. A4 기준 제목 26~32pt, 소제목 14~17pt, 본문 11.5~13pt, 주석 최소 9pt, 행간 1.6~1.8. 모바일 본문 최소 32px. 표는 옅은 행 구분선과 충분한 셀 여백을 사용하고 줄바꿈·고아행·잘림을 점검하세요. 실제 사용 글꼴의 상업 이용 라이선스는 출판 전 확인 항목으로 남겨 주세요.',
+ '[반드시 넣을 주석] 예술적 시각 분류이며 성격·능력·건강·운세를 판단하지 않습니다. 촬영 조건에 따라 달라질 수 있습니다.\n[푸터 원문] copyright ⓒ math-tong All right reserved.',
+ '[요청 결과물] 먼저 6개 영역별 완성 원고를 표로 제시하세요. 이어서 도해·색상·범례·배치가 포함된 완성형 인포그래픽을 만들어 주세요. 파일 생성이 가능하면 외부 라이브러리·추적 코드 없이 한 파일로 열리는 인쇄용 HTML/CSS(A4·2단·인쇄 스타일 포함)와 편집 가능한 SVG를 제공하고, 글자가 선택 가능한 벡터 PDF로 출력할 수 있게 해 주세요. 이미지 생성만 가능한 경우 PNG 한 장과 정확한 한국어 원고를 따로 주세요. 파일을 직접 만들 수 없으면 가능하다고 주장하지 말고 복사해서 저장할 수 있는 전체 HTML 코드를 제공하세요. 마지막에는 줄바꿈·대비·수치 출처·저작권·인쇄 잘림의 실제 점검 결과와 남은 확인 사항을 짧게 적어 주세요.'
+ ].join('\n\n');}
 async function openGemini(){updatePrompt();const copied=await copy($('gemini-prompt').value);toast(copied?'프롬프트를 복사했어요. Gemini 대화창에 붙여넣어 주세요.':'질문 칸을 길게 눌러 복사한 뒤 Gemini에 붙여넣어 주세요.');window.open('https://gemini.google.com/app','_blank','noopener,noreferrer');}
 function saveImage(){
- if(!state.photo)return;finishTyping();drawStudio(0,'result-photo');const width=1080,pad=72,c=document.createElement('canvas'),ctx=c.getContext('2d');c.width=width;c.height=100;const operations=[];let y=90;
- function text(value,size=34,color='#e5e9df',gap=28){ctx.font=size+'px "Noto Sans KR",sans-serif';const lines=[];let line='';for(const char of value){if(char==='\n'||ctx.measureText(line+char).width>width-pad*2){lines.push(line);line=char==='\n'?'':char;}else line+=char;}if(line)lines.push(line);for(const line of lines){operations.push({type:'text',line,size,color,y});y+=size*1.65;}y+=gap;}
- const ch=resultData();text('관상 연구소 · '+(state.photo.demo?'일러스트 데모':'사진의 시각 유형'),30,'#d9bd83');text(ch.name+' · '+ch.subtitle,48,'#f2dfb6');const imageHeight=Math.round((width-pad*2)*$('result-photo').height/$('result-photo').width);operations.push({type:'image',y,height:imageHeight});y+=imageHeight+60;text(ch.overview,36);for(const [label,value]of PhotoTypes.rows(state.photo,state.photo.demo)){text(label,30,'#d9bd83',8);text(value);}text(ch.advice);text(ch.hope);text('촬영 각도·표정·조명에 따라 달라지는 시각적 분류입니다.',28,'#b5c5b8');text('copyright ⓒ math-tong All right reserved.',25,'#d9bd83');text(SITE,25,'#b5c5b8',0);
- c.height=Math.ceil(y+60);ctx.fillStyle='#14221f';ctx.fillRect(0,0,width,c.height);ctx.textBaseline='top';for(const op of operations){if(op.type==='image')ctx.drawImage($('result-photo'),pad,op.y,width-pad*2,op.height);else{ctx.fillStyle=op.color;ctx.font=op.size+'px "Noto Sans KR",sans-serif';ctx.fillText(op.line,pad,op.y);}}
- c.toBlob(blob=>{if(!blob){toast('이미지를 만들지 못했어요. 인쇄 · PDF 저장을 이용해 주세요.');return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='관상연구소_시각유형.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('결과 이미지를 저장했어요. 휴대폰 다운로드 폴더를 확인해 주세요.');},'image/png');
+ if(!state.photo)return;finishTyping();drawStudio(0,'result-photo');
+ const layout=state.outputLayout,canvas=Publication.create({photo:$('result-photo'),profile:resultData(),rows:PhotoTypes.rows(state.photo,state.photo.demo),demo:state.photo.demo,layout,site:SITE});
+ canvas.toBlob(blob=>{if(!blob){toast('이미지를 만들지 못했어요. 인쇄 · PDF 저장을 이용해 주세요.');return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='관상연구소_'+(layout==='columns'?'2단':'표형')+'_리포트.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('선택한 구성으로 결과 이미지를 저장했어요.');},'image/png');
 }
 function syncMotion(){document.body.classList.toggle('motion-off',!state.motion);$('motion-button').textContent='격자 움직임 '+(state.motion?'ON':'OFF');$('motion-button').setAttribute('aria-pressed',String(state.motion));schedule();}
 function reset(){clearCapture();stopCamera();finishTyping();state.index=0;$('topic').value='';$('gemini-box').open=false;go('home');}
@@ -150,6 +163,8 @@ function init(){
  document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>button.closest('dialog').close());document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}}));
  PhotoTypes.profiles.forEach(ch=>{const card=document.createElement('div');card.className='collection-card';const glyph=document.createElement('span');glyph.className='glyph';glyph.textContent=ch.glyph;const name=document.createElement('strong');name.textContent=ch.name;const text=document.createElement('p');text.textContent=ch.subtitle;card.append(glyph,name,text);$('collection-grid').append(card);});
  $('share-result').onclick=()=>share(true);$('copy-link').onclick=()=>share(false);$('copy-result').onclick=async()=>{finishTyping();toast(await copy(plainText())?'결과 전문을 복사했어요.':'텍스트를 복사하지 못했어요.');};$('print-result').onclick=()=>{finishTyping();window.print();};window.addEventListener('beforeprint',finishTyping);$('save-image').onclick=saveImage;$('finish-typing').onclick=finishTyping;$('replay-reading').onclick=()=>{unlockAudio();showResult();};
+ $('typing-speed').onchange=e=>{state.typingDelay=Number(e.target.value);};$('pause-typing').onclick=()=>{if(!typingTimer)return;state.typingPaused=!state.typingPaused;$('pause-typing').textContent=state.typingPaused?'이어서 읽기':'잠시 멈춤';$('pause-typing').setAttribute('aria-pressed',String(state.typingPaused));$('screen-result').dataset.typing=state.typingPaused?'paused':'running';};
+ $('output-layout').onchange=e=>{state.outputLayout=e.target.value;$('printable-result').dataset.layout=state.outputLayout;};
  $('topic').oninput=updatePrompt;$('open-gemini').onclick=openGemini;$('quick-gemini').onclick=openGemini;
  ['wheel','touchstart','pointerdown'].forEach(event=>window.addEventListener(event,()=>{if(typingTimer)followWriting=false;},{passive:true}));
  portrait.onload=schedule;portrait.onerror=()=>toast('일러스트를 불러오지 못했어요. 카메라로 이용해 주세요.');new ResizeObserver(schedule).observe($('main'));window.addEventListener('resize',schedule);
