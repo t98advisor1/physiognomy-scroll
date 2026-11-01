@@ -1,420 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>조선 수묵 관상 서첩 - 유수청음상(流水淸音相)</title>
-    <style>
-        :root {
-            --hanji-bg: #f4efe6;
-            --hanji-card: #fbf8f3;
-            --ink-black: #1e1e1c;
-            --ink-dark: #3a3834;
-            --ink-medium: #635f59;
-            --ink-light: #a39e93;
-            --seal-red: #b8332a;
-            --gold-accent: #8c734b;
-            --border-line: #d8d0c5;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--hanji-bg);
-            background-image: 
-                radial-gradient(rgba(140, 115, 75, 0.06) 1px, transparent 0),
-                radial-gradient(rgba(30, 30, 28, 0.04) 1px, transparent 0);
-            background-size: 24px 24px;
-            background-position: 0 0, 12px 12px;
-            color: var(--ink-black);
-            font-family: "Nanum Myeongjo", "Batang", "바탕", "Gungsuh", Georgia, serif;
-            line-height: 1.85;
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .scroll-container {
-            max-width: 820px;
-            width: 100%;
-            background-color: var(--hanji-card);
-            border: 2px solid var(--ink-dark);
-            outline: 6px double var(--border-line);
-            outline-offset: -12px;
-            padding: 56px 48px;
-            box-shadow: 0 15px 35px rgba(30, 30, 28, 0.12);
-            position: relative;
-        }
-
-        /* 네 귀퉁이 전통 문양 장식 */
-        .corner {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border: 2px solid var(--gold-accent);
-            pointer-events: none;
-        }
-        .corner.tl { top: 16px; left: 16px; border-right: none; border-bottom: none; }
-        .corner.tr { top: 16px; right: 16px; border-left: none; border-bottom: none; }
-        .corner.bl { bottom: 16px; left: 16px; border-right: none; border-top: none; }
-        .corner.br { bottom: 16px; right: 16px; border-left: none; border-top: none; }
-
-        /* 헤더 영역 */
-        header {
-            text-align: center;
-            border-bottom: 1px solid var(--border-line);
-            padding-bottom: 32px;
-            margin-bottom: 36px;
-            position: relative;
-        }
-
-        .subtitle-badge {
-            display: inline-block;
-            font-size: 0.88rem;
-            color: var(--ink-medium);
-            letter-spacing: 3px;
-            border-top: 1px solid var(--ink-light);
-            border-bottom: 1px solid var(--ink-light);
-            padding: 4px 14px;
-            margin-bottom: 14px;
-        }
-
-        h1 {
-            font-size: 2.35rem;
-            font-weight: 700;
-            letter-spacing: 4px;
-            color: var(--ink-black);
-            margin-bottom: 10px;
-        }
-
-        .hanja-title {
-            font-size: 1.25rem;
-            color: var(--gold-accent);
-            font-weight: normal;
-            letter-spacing: 2px;
-        }
-
-        .alias {
-            font-size: 1.05rem;
-            color: var(--ink-dark);
-            margin-top: 12px;
-            font-style: italic;
-        }
-
-        /* 낙관 (붉은 도장) */
-        .seal {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border: 3px solid var(--seal-red);
-            color: var(--seal-red);
-            font-weight: bold;
-            font-size: 0.82rem;
-            line-height: 1.15;
-            letter-spacing: 1px;
-            padding: 3px;
-            border-radius: 3px;
-            transform: rotate(-3deg);
-            box-shadow: inset 0 0 2px var(--seal-red);
-            user-select: none;
-            background-color: rgba(184, 51, 42, 0.04);
-        }
-
-        /* 수묵 일러스트 영역 */
-        .artwork-box {
-            margin: 24px 0 36px;
-            text-align: center;
-            background: linear-gradient(to bottom, rgba(244,239,230,0.4), rgba(244,239,230,0.9));
-            border: 1px solid var(--border-line);
-            padding: 24px 16px 16px;
-            border-radius: 2px;
-        }
-
-        .artwork-svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* 성정 4문답 요약 카드 */
-        .traits-box {
-            background-color: var(--hanji-bg);
-            border-left: 4px solid var(--ink-dark);
-            padding: 20px 24px;
-            margin-bottom: 40px;
-        }
-
-        .traits-title {
-            font-size: 1rem;
-            font-weight: bold;
-            color: var(--ink-dark);
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-        }
-
-        .traits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 10px 20px;
-            list-style: none;
-            font-size: 0.92rem;
-            color: var(--ink-medium);
-        }
-
-        .traits-grid li strong {
-            color: var(--ink-black);
-        }
-
-        /* 본문 섹션 */
-        .section {
-            margin-bottom: 40px;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 18px;
-            border-bottom: 1px dashed var(--border-line);
-            padding-bottom: 8px;
-        }
-
-        .section-title {
-            font-size: 1.35rem;
-            font-weight: bold;
-            color: var(--ink-black);
-            letter-spacing: 2px;
-        }
-
-        .section-content {
-            font-size: 1.05rem;
-            color: var(--ink-dark);
-            text-align: justify;
-            word-break: keep-all;
-        }
-
-        .reading-list {
-            list-style: none;
-        }
-
-        .reading-item {
-            margin-bottom: 22px;
-            padding-left: 16px;
-            border-left: 2px solid var(--gold-accent);
-        }
-
-        .reading-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .reading-label {
-            display: block;
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--ink-black);
-            margin-bottom: 6px;
-        }
-
-        .highlight {
-            background: linear-gradient(transparent 65%, rgba(140, 115, 75, 0.22) 35%);
-            font-weight: bold;
-        }
-
-        /* 하단 푸터 & 버튼 */
-        footer {
-            margin-top: 52px;
-            padding-top: 28px;
-            border-top: 1px solid var(--border-line);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .disclaimer {
-            font-size: 0.85rem;
-            color: var(--ink-medium);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            background-color: var(--ink-dark);
-            color: var(--hanji-card);
-            border: 1px solid var(--ink-dark);
-            padding: 8px 16px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn:hover {
-            background-color: var(--ink-black);
-            transform: translateY(-1px);
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--ink-dark);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--hanji-bg);
-            color: var(--ink-black);
-        }
-
-        @media (max-width: 640px) {
-            body { padding: 16px 10px; }
-            .scroll-container { padding: 36px 22px; }
-            h1 { font-size: 1.75rem; }
-            .traits-grid { grid-template-columns: 1fr; }
-        }
-
-        @media print {
-            body { background: none; padding: 0; }
-            .scroll-container { box-shadow: none; border: 1px solid #000; }
-            .btn-group { display: none; }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101b1b">
+<title>관상 연구소 — 내 안에 숨어 있는 조선 캐릭터는?</title>
+<meta name="description" content="네 번의 선택, 열여섯 가지 뜻밖의 나. 입체 수묵 스튜디오와 함께하는 3분 조선 캐릭터 탐험. 재미용 창작이며 얼굴이나 운명을 분석하지 않습니다.">
+<link rel="canonical" href="https://t98advisor1.github.io/physiognomy-scroll/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="관상 연구소">
+<meta property="og:url" content="https://t98advisor1.github.io/physiognomy-scroll/">
+<meta property="og:title" content="내 안에 숨어 있는 조선 캐릭터는? | 관상 연구소">
+<meta property="og:description" content="네 번의 선택이 여는 열여섯 가지 뜻밖의 나. 3D 수묵 스튜디오에서 나만의 캐릭터 교지를 펼쳐 보세요. 재미용 창작 · 사진 전송 없음">
+<meta property="og:image" content="https://t98advisor1.github.io/physiognomy-scroll/assets/og-preview-v2.png">
+<meta property="og:image:secure_url" content="https://t98advisor1.github.io/physiognomy-scroll/assets/og-preview-v2.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="30% 불투명도의 수묵 초상화와 금빛 궤도, 내 안에 숨어 있는 조선 캐릭터는?">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="관상 연구소 — 네 번의 선택, 열여섯 가지 나">
+<meta name="twitter:description" content="3분 조선 캐릭터 탐험. 재미용 창작 · 사진 전송 없음">
+<meta name="twitter:image" content="https://t98advisor1.github.io/physiognomy-scroll/assets/og-preview-v2.png">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="data.js" defer></script><script src="app.js" defer></script>
 </head>
 <body>
-
-    <main class="scroll-container">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
-
-        <header>
-            <span class="subtitle-badge">朝鮮水墨觀相書帖 · 제13상(1100)</span>
-            <h1>유수청음상 <span class="hanja-title">(流水淸音相)</span></h1>
-            <p class="alias">“바위를 돌아 흐르며 맑은 소리를 내는 지혜로운 시냇물의 상”</p>
-        </header>
-
-        <!-- 수묵 산수화 인라인 SVG -->
-        <div class="artwork-box" aria-label="수묵 산수화 일러스트">
-            <svg class="artwork-svg" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
-                <!-- 원경의 산봉우리 (담묵) -->
-                <path d="M20,150 Q110,30 210,130 T410,90 T580,150 Z" fill="rgba(58, 56, 52, 0.14)" />
-                <path d="M120,150 Q240,15 350,125 T540,70 L590,150 Z" fill="rgba(58, 56, 52, 0.22)" />
-                <!-- 중경의 바위와 소나무 언덕 (농묵) -->
-                <path d="M0,155 Q90,95 190,145 Z" fill="rgba(30, 30, 28, 0.65)" />
-                <path d="M420,155 Q510,85 600,145 Z" fill="rgba(30, 30, 28, 0.55)" />
-                <!-- 흐르는 시냇물 (유수청음) -->
-                <path d="M250,115 Q290,132 230,148 Q160,162 340,175" fill="none" stroke="#3a3834" stroke-width="2.2" stroke-linecap="round"/>
-                <path d="M265,122 Q315,137 255,154 Q205,166 390,178" fill="none" stroke="#8c734b" stroke-width="1.3" stroke-dasharray="6,4" stroke-linecap="round"/>
-                <!-- 수묵 바위 점묘 -->
-                <circle cx="220" cy="145" r="5" fill="#1e1e1c" />
-                <circle cx="232" cy="148" r="3" fill="#3a3834" />
-                <circle cx="295" cy="138" r="6" fill="#1e1e1c" />
-                <!-- 하늘 위 학 한 쌍 -->
-                <path d="M140,45 Q148,37 156,45 Q164,37 172,45" fill="none" stroke="#1e1e1c" stroke-width="1.5" />
-                <path d="M168,32 Q173,26 178,32 Q183,26 188,32" fill="none" stroke="#3a3834" stroke-width="1.2" />
-            </svg>
-        </div>
-
-        <!-- 성정 4문답 요약 -->
-        <section class="traits-box">
-            <div class="traits-title">■ 타고난 네 가지 성정(性情)의 기둥</div>
-            <ul class="traits-grid">
-                <li><strong>1문 (통찰·원대함):</strong> 높은 봉우리에 올라 전체 지세와 흐름을 굽어살핀다</li>
-                <li><strong>2문 (절개·강직함):</strong> 오랜 원칙과 대의명분, 신념의 기둥을 지킨다</li>
-                <li><strong>3문 (수성·축적):</strong> 깊은 뿌리처럼 내실을 다져 가문과 터전을 지킨다</li>
-                <li><strong>4문 (청류·여유):</strong> 고즈넉한 서재와 솔바람 속 학문과 예술을 남긴다</li>
-            </ul>
-        </section>
-
-        <!-- [총평] -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">[총평]</h2>
-            </div>
-            <p class="section-content">
-                그대의 기상을 가만히 들여다보니, 천 길 봉우리에 올라 세상의 큰 물줄기를 굽어살피되 골짜기 아래로 내려와서는 거친 바위를 부드럽게 감싸 안으며 맑은 가락을 울리는 <span class="highlight">유수청음상(流水淸音相)</span>의 귀한 풍모가 역력하옵니다. 속세의 흙탕물에도 본연의 맑은 빛을 잃지 않는 곧은 절개와 깊은 뿌리의 내실을 함께 갖추셨으니, 시간이 흐를수록 그 향기와 울림이 더욱 깊어져 만인의 귀감이 될 대인(大人)의 상이라 할 수 있겠소이다.
-            </p>
-        </section>
-
-        <!-- [항목별 리딩] -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">[항목별 리딩]</h2>
-            </div>
-            <ul class="reading-list section-content">
-                <li class="reading-item">
-                    <span class="reading-label">삼정(초·중·말년)</span>
-                    초년(상정)에는 높은 곳을 바라보는 원대한 눈과 총명함으로 일찍이 학문과 이치의 길을 밝혀 기틀을 세우셨고, 중년(중정)에는 흔들리지 않는 신념의 기둥으로 무거운 책무를 감당하며 탄탄한 터전을 일구어 내셨습니다. 다가오는 말년(하정)은 깊고 넉넉한 연못에 맑은 물이 가득 고이는 형국이니, 그간 쌓아 올린 내실과 덕망이 고즈넉한 여유 속에서 가장 풍요롭고 평안한 결실을 맺을 것입니다.
-                </li>
-                <li class="reading-item">
-                    <span class="reading-label">재물운(재백궁)</span>
-                    그대의 재백궁은 일확천금의 거친 폭포수가 아니라, 사시사철 마르지 않고 가문과 터전을 적시는 깊은 우물과 같습니다. 스스로 세운 원칙을 허물지 않고 정직하게 뿌리를 다져 모은 재물이기에 그 기운이 새어 나가지 않고 묵직하게 축적되며, 세월이 흐를수록 곳간과 마음의 여유가 함께 넉넉해지는 복록을 누리실 것입니다.
-                </li>
-                <li class="reading-item">
-                    <span class="reading-label">관록·성취운</span>
-                    전체의 지세를 읽는 통찰력과 대의명분을 지키는 강직함이 어우러져, 그대가 머무는 자리마다 자연스레 권위와 신뢰가 뒤따릅니다. 억지로 이름을 드높이려 애쓰지 않아도 맑은 물소리가 골짜기 전체에 퍼지듯, 그대가 묵묵히 닦아온 학문과 지혜의 깊이가 후학들과 주변 사람들에게 깊은 울림을 주어 명예로운 성취로 이어질 상입니다.
-                </li>
-                <li class="reading-item">
-                    <span class="reading-label">대인·인연운</span>
-                    거친 바위를 부수지 않고 돌아 흐르는 지혜로운 시냇물처럼, 강직한 내면 속에서도 타인을 대할 때는 은은한 솔바람 같은 품격을 지니셨습니다. 가벼운 인연보다는 뜻을 함께하고 학문과 예술의 향기를 나눌 수 있는 진중한 벗들이 곁에 머물며, 가문과 일터의 든든한 버팀목으로서 깊은 존경과 신의를 얻으실 것입니다.
-                </li>
-            </ul>
-        </section>
-
-        <!-- [처세 조언] -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">[처세 조언]</h2>
-            </div>
-            <p class="section-content">
-                전반적인 행운의 물꼬를 더욱 시원하게 트기 위해서는, 때로 <span class="highlight">‘흐름에 몸을 맡기는 여백의 지혜’</span>를 곁들이시는 것이 좋겠나이다. 워낙 원대한 안목으로 전체를 살피고 굳건한 원칙으로 터전을 지키시는 분이시니, 자칫 스스로의 어깨에 지나치게 무거운 돌을 얹어두기 쉽습니다. 시냇물이 바위를 만나면 잠시 돌아가며 오히려 더 맑은 소리(淸音)를 내듯, 세상사가 원칙대로만 흐르지 않을 때는 한 걸음 물러나 서재의 창을 열고 솔바람을 맞으시지요. 잘 가꾸어 둔 정원에 찻잔 하나를 놓아두는 그 한 뼘의 여유 속에서, 그대가 기다리던 뜻밖의 길운(吉運)과 새로운 영감이 찾아올 것입니다.
-            </p>
-        </section>
-
-        <!-- [희망 메시지] -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">[희망 메시지]</h2>
-            </div>
-            <p class="section-content">
-                산이 깊어야 물이 맑고, 뿌리가 깊어야 바람에 흔들리지 않는 법입니다. 그대가 걸어온 성실하고 올곧은 시간들은 이미 누구도 흉내 낼 수 없는 깊고 푸른 강물을 이루었으니, 앞으로 펼쳐질 날들은 그 물길 위에 따뜻한 봄볕과 맑은 달빛이 가득 내려앉는 시절이 될 것입니다. 그대의 걸음마다 청아한 시냇물 소리가 끊이지 않고, 가문과 서재에 사시사철 평안과 만복이 깃들기를 이 늙은 관상쟁이가 두 손 모아 축원하옵니다.
-            </p>
-        </section>
-
-        <footer>
-            <div style="display: flex; align-items: center; gap: 14px;">
-                <div class="seal" title="관상연구소 인장">觀相<br>硏究</div>
-                <p class="disclaimer">
-                    본 서첩은 재미를 위해 지어진 창작 픽션(FOR FUN ONLY)이옵니다.
-                </p>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-outline" onclick="copyText()">서첩 전문 복사</button>
-                <button class="btn" onclick="window.print()">서첩 인쇄 / PDF 저장</button>
-            </div>
-        </footer>
-    </main>
-
-    <script>
-        function copyText() {
-            const sections = document.querySelectorAll('.section');
-            let textToCopy = "■ 조선 수묵 관상 서첩 : 유수청음상(流水淸音相) ■\n\n";
-            sections.forEach(sec => {
-                const title = sec.querySelector('.section-title').innerText;
-                const content = sec.querySelector('.section-content').innerText;
-                textToCopy += `${title}\n${content}\n\n`;
-            });
-            navigator.clipboard.writeText(textToCopy.trim()).then(() => {
-                alert("관상 서첩의 전문이 클립보드에 복사되었소이다.");
-            });
-        }
-    </script>
-</body>
-</html>
+<a class="skip-link" href="#main">본문으로 이동</a>
+<header class="app-header">
+<button class="brand" id="home-button" aria-label="관상 연구소 처음으로"><span class="seal">觀<br>相</span><span>관상 연구소<small>THE PORTRAIT ATELIER</small></span></button>
+<div class="header-tools"><button class="icon-button" id="sound-button" aria-label="소리 켜기" aria-pressed="false">소리 OFF</button><button class="icon-button" id="motion-button" aria-label="움직임 끄기" aria-pressed="true">움직임 ON</button><button class="icon-button help-button" id="info-button" aria-label="이용 안내">?</button></div>
+</header>
+<main id="main" tabindex="-1">
+<section class="screen active" id="screen-home" aria-labelledby="home-title">
+<div class="home-grid">
+<div class="hero-copy"><p class="eyebrow"><span class="live-dot"></span> 나를 탐험하는 작은 실험실 <span class="edition">VOL. 01</span></p>
+<h1 id="home-title">내 안에 숨어 있는<br><em>조선 캐릭터</em>는?</h1>
+<p class="hero-lead">평소엔 몰랐던 나의 한 면.<br>네 번의 선택으로, 뜻밖의 이야기가 펼쳐집니다.</p>
+<div class="hero-facts"><span>약 3분</span><i></i><span>4개의 질문</span><i></i><span>16가지 캐릭터</span></div></div>
+<div class="hero-art" id="hero-art"><div class="hero-watermark" aria-hidden="true"></div><canvas id="hero-canvas" aria-hidden="true"></canvas><span class="art-label label-top">觀相 · 상상으로 읽는 나</span><span class="art-label label-bottom">YOUR STORY IS STILL UNWRITTEN</span><span class="coordinate left">性<br>情</span><span class="coordinate right">探<br>究</span></div>
+<div class="hero-actions"><button class="button primary" id="start-demo">내 캐릭터 발견하기 <span aria-hidden="true">↗</span></button><button class="button secondary" id="start-camera">카메라 효과로 시작하기 <span aria-hidden="true">◉</span></button><p class="microcopy">카메라 없이도 모든 결과를 볼 수 있어요.<br>사진 촬영·저장·전송 없이, 화면 효과만 사용합니다.</p><button class="text-button" id="open-collection">열여섯 캐릭터, 먼저 살짝 보기 <span>→</span></button></div>
+</div>
+<div class="home-bottom"><span>재미용 창작 캐릭터 테스트</span><span>얼굴·성격·운명에 대한 과학적 분석이 아닙니다.</span></div>
+</section>
+<section class="screen" id="screen-studio" aria-labelledby="studio-title" hidden>
+<div class="section-top"><span class="chapter">01 / 03 · 수묵 스튜디오</span><button class="text-button" id="skip-studio">바로 문답으로 →</button></div>
+<h1 class="section-title" id="studio-title">상상의 렌즈를 켜다.</h1><p class="section-lead">금빛 궤도와 입체 격자를 움직여 보세요.<br>이 화면은 시각 효과이며 얼굴을 분석하지 않아요.</p>
+<div class="studio-layout"><div class="camera-stage"><video id="camera-video" playsinline muted hidden></video><canvas id="studio-canvas" aria-label="수묵 초상화 또는 카메라 화면에 입체 장식 효과가 나타납니다"></canvas><span class="stage-label" id="camera-status" role="status">수묵화 데모</span><span class="stage-label stage-right">VISUAL EFFECT ONLY</span><div class="stage-corners" aria-hidden="true"></div></div>
+<div class="studio-controls"><p class="small-label">나만의 렌즈</p><div class="lens-buttons" role="group" aria-label="시각 효과 선택"><button class="lens active" data-effect="mesh" aria-pressed="true">입체 격자</button><button class="lens" data-effect="ink" aria-pressed="false">수묵 농담</button><button class="lens" data-effect="thermal" aria-pressed="false">컬러 파동</button></div><label class="range-label" for="rotation">입체 회전 <output id="rotation-value">0°</output></label><input id="rotation" type="range" min="-35" max="35" value="0"><label class="range-label" for="zoom">확대 <output id="zoom-value">1.0×</output></label><input id="zoom" type="range" min="1" max="1.8" step="0.1" value="1"><p class="studio-note">슬라이더를 움직이면 입체 격자의 각도가 바뀌어요. 사진은 결과에 영향을 주지 않습니다.</p><button class="button primary" id="go-quiz">이제 나의 이야기 고르기 <span>→</span></button><button class="text-button" id="camera-toggle">카메라로 바꾸기</button></div></div>
+</section>
+<section class="screen quiz-screen" id="screen-quiz" aria-labelledby="question-title" hidden>
+<div class="section-top"><span class="chapter">02 / 03 · 네 번의 선택</span><span id="question-counter">01 / 04</span></div>
+<div class="progress-track" role="progressbar" aria-label="문답 진행" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0"><span id="question-progress"></span></div>
+<div id="question-content"></div><div class="quiz-nav"><button class="text-button" id="previous-question">← 이전 질문</button><button class="button primary" id="next-question" disabled>다음 질문 <span>→</span></button></div>
+<p class="quiz-note">정답은 없어요. 지금 더 끌리는 쪽을 골라 주세요.</p>
+</section>
+<section class="screen" id="screen-reveal" aria-labelledby="reveal-title" hidden><div class="reveal-scene"><div class="reveal-orb" aria-hidden="true">相</div><p class="eyebrow">네 개의 이야기를 잇는 중</p><h1 class="section-title" id="reveal-title">그대의 교지가<br>곧 펼쳐집니다.</h1><button class="text-button" id="skip-reveal">바로 펼쳐 보기 →</button></div></section>
+<section class="screen result-screen" id="screen-result" aria-labelledby="result-name" hidden>
+<div class="section-top no-print"><span class="chapter">03 / 03 · 나의 캐릭터 교지</span><span id="result-number"></span></div>
+<article class="result-card" id="printable-result"><div class="result-emblem" id="result-emblem" aria-hidden="true">山</div><p class="eyebrow" id="result-code"></p><h1 id="result-name"></h1><p id="result-subtitle"></p><div class="result-tags" id="result-tags"></div><div class="result-divider"><span>그대의 이야기는 지금부터</span></div><div class="reading-block"><h2>나를 닮은 한 장면</h2><p id="reading-overview" class="overview"></p></div><div class="reading-block"><h2>나의 가능성 지도</h2><div id="reading-items"></div></div><div class="reading-block"><h2>오늘의 작은 실험</h2><p id="reading-advice"></p></div><div class="reading-block hope"><h2>그대에게 보내는 한마디</h2><p id="reading-hope"></p></div><p class="result-disclaimer">선택한 답변으로 만든 재미용 창작입니다. 실제 성격·능력·미래를 판단하지 않아요.<br>나를 하나의 유형에 가두지 말고, 새로운 면을 발견하는 이야기로 즐겨 주세요.</p></article>
+<div class="result-tools no-print"><button class="button primary" id="share-result">내 캐릭터 공유하기 <span>↗</span></button><div class="tool-grid"><button class="button secondary" id="copy-result">교지 텍스트 복사</button><button class="button secondary" id="print-result">인쇄 · PDF</button></div><button class="text-button" id="copy-link">친구에게 테스트 링크 보내기 ↗</button></div>
+<details class="gemini-box no-print" id="gemini-box"><summary>이야기를 더 이어 가고 싶다면 <span>Gemini와 확장하기 +</span></summary><div class="gemini-inner"><p>선택 기능이에요. 내 캐릭터와 답변 텍스트로 이야기를 더 만들어 보세요. 사진은 포함되지 않습니다. 학교 계정의 이용 범위에 따라 Gemini에 접속하지 못할 수 있어요.</p><label for="topic">함께 탐색할 주제 (선택)</label><input id="topic" maxlength="80" placeholder="예: 공부 습관, 친구와의 협업, 진로 탐색"><p class="field-hint">이름·학교·연락처 같은 개인정보는 적지 마세요.</p><label for="gemini-prompt">Gemini에 붙여넣을 질문</label><textarea id="gemini-prompt" rows="6" readonly></textarea><button class="button secondary" id="open-gemini">질문 복사하고 Gemini 열기 ↗</button><label for="gemini-response">답변을 이 교지에 반영하기 (선택)</label><textarea id="gemini-response" rows="5" maxlength="10000" placeholder="[총평], [항목별 리딩], [처세 조언], [희망 메시지] 형식의 답변을 붙여넣어 주세요."></textarea><button class="button secondary" id="apply-gemini">답변을 교지에 적용하기</button><button class="text-button" id="restore-reading">원래 캐릭터 이야기로 되돌리기</button></div></details>
+<div class="result-bottom no-print"><button class="text-button" id="result-collection">다른 캐릭터도 구경하기 →</button><button class="text-button" id="restart">처음부터 다시 탐험하기 ↺</button></div>
+</section>
+</main>
+<footer class="footer">觀相 硏究所 <span>·</span> FOR FUN ONLY <span>·</span> 나의 가능성은 한 가지가 아니니까.</footer>
+<dialog id="collection-dialog" aria-labelledby="collection-title"><button class="dialog-close" data-close aria-label="도감 닫기">×</button><p class="eyebrow">THE SIXTEEN PORTRAITS</p><h2 id="collection-title">열여섯 가지, 모두 다른 빛.</h2><p class="dialog-intro">높고 낮은 등급은 없어요. 저마다 다른 매력을 가진 창작 캐릭터예요.</p><div id="collection-grid"></div><button class="button secondary" data-close>탐험으로 돌아가기</button></dialog>
+<dialog id="info-dialog" aria-labelledby="info-title"><button class="dialog-close" data-close aria-label="안내 닫기">×</button><p class="eyebrow">BEFORE THE ADVENTURE</p><h2 id="info-title">가볍게 즐기고, 새롭게 발견해요.</h2><div class="info-item"><strong>답변이 캐릭터를 만듭니다.</strong><p>4문답의 16가지 조합을 16개 캐릭터에 연결합니다. 얼굴 모양, 피부색, 외모를 측정하거나 평가하지 않습니다. 과학적 성격 검사나 미래 예측이 아닙니다.</p></div><div class="info-item"><strong>카메라는 선택, 얼굴은 내 기기에.</strong><p>카메라는 실시간 화면 효과에만 사용합니다. 사진·영상·얼굴 좌표를 저장하거나 서버로 보내지 않습니다. 문답으로 이동하거나 화면을 벗어나면 카메라를 끕니다. 데모로도 모든 결과를 볼 수 있습니다.</p></div><div class="info-item"><strong>나도, 친구도 한 가지 유형보다 큽니다.</strong><p>등급 매기기나 외모 놀림 대신 서로 다른 강점을 이야기해 보세요. 결과 공유는 텍스트와 테스트 링크만 사용합니다.</p></div><div class="info-item"><strong>움직임과 소리는 내가 선택해요.</strong><p>상단 버튼으로 움직임을 멈추거나 효과음을 켤 수 있습니다. 소리는 기본적으로 꺼져 있습니다. 별도 회원가입이나 API 키가 필요하지 않습니다.</p></div><button class="button primary" data-close>알겠어요</button></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+</body></html>
