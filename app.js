@@ -3,7 +3,7 @@
 'use strict';
 const $=id=>document.getElementById(id),SITE='https://kwansang.vercel.app/';
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-const state={screen:'home',index:0,sound:true,motion:!reduced.matches,effects:{mesh:true,ink:false,thermal:true},yaw:0,zoom:1,typingDelay:110,typingPaused:false,outputLayout:'table',photo:null,demo:true};
+const state={screen:'home',index:0,sound:true,motion:!reduced.matches,effects:{mesh:true,ink:false,thermal:true},yaw:0,zoom:1,typingDelay:90,typingPaused:false,outputLayout:'table',photo:null,demo:true};
 const portrait=new Image();portrait.src='assets/portrait.webp';
 const video=$('camera-video');
 let stream=null,cameraRequest=0,frame=null,lastFrame=0,revealTimer=null,typingTimer=null,toastTimer=null,audio=null,keyNoise=null,typingTargets=[],followWriting=true,lastFollowAt=0;
@@ -157,8 +157,10 @@ function updatePrompt(){
   '[형식] 9:16 세로, 1080×1920px 이상. 휴대폰 전체 화면에서 읽는 한 장짜리 완결형 포스터입니다. 평면의 완성 아트워크만 보여 주세요. 휴대폰 테두리·브라우저 화면·목업은 넣지 마세요.',
   '[입력]\n'+context,
   '[대표 비주얼 — 가장 중요] 화면의 약 60%를 차지하는 익명의 3D 가상 얼굴. 정면에서 약 15도 돌아간 얼굴의 눈두덩·볼·콧등·턱이 분명한 입체 면으로 읽혀야 합니다. '+shape+'을 표현하세요. '+emphasis+'에 빛을 모으세요. 실존 인물을 닮게 만들지 마세요.',
+  '[목표 인상] 생성 예시처럼 얼굴이 곡면과 빛으로 생생하게 드러나는 정교한 3D CGI입니다. 매끈한 반투명 표면, 눈두덩·입술·콧등의 자연스러운 굴곡, 목선까지 이어지는 볼륨을 표현하세요. 보라색 외곽에서 주황색 중간 면, 노란빛이 모이는 중심 능선으로 색이 이어집니다. 얇은 금빛 궤도와 발광 점은 얼굴의 입체감을 돕는 정도로 배치하세요.',
+  '[참고 이미지] 사용자가 관상 연구소의 개선 예시 이미지를 함께 첨부했다면 그 이미지의 구도·재질·빛·색·편집 분위기를 참고하세요. 유형 이름과 강조 부위는 이번 입력 자료를 따르세요. 참고 이미지가 없어도 이 프롬프트만으로 완성 이미지를 생성하세요.',
   '[깊이와 재질] 얇은 반투명 얼굴 표면 위에 곡면을 감싸는 정밀한 가로·세로 격자를 입히세요. 격자에서 떨어져 떠 있는 작은 발광 지점, 그 지점을 잇는 곡선을 겹쳐 격자→지점→곡선의 세 층을 보여 주세요. 층은 약간 어긋나고 서로 겹치며 깊이·가림·부드러운 그림자가 생겨야 합니다. 열화상 보라 #69188E·주황 #FF7726·노랑 #FFF199가 얼굴 표면의 곡률을 따라 부드럽게 연결되게 하세요. 중심선은 얼굴 위를 흐르는 곡선으로 표현하세요.',
-  '[편집] 아이보리 #FAF9F3 여백에 짙은 청록 #173B36 제목, 골드 #9C773B의 작은 구분선. 위쪽에는 큰 제목과 짧은 부제만 두세요. 얼굴 도해에는 눈·코·입·윤곽의 짧은 한글 라벨을 지시선으로 연결하세요. 작은 범례에 격자/지점/곡선을 표시하세요. 아래에는 같은 크기의 제작 3단계 카드를 나란히 두세요. 본문은 휴대폰에서 읽기 쉬운 크기로 최소화하세요.',
+  '[편집] 아이보리 #FAF9F3 여백에 짙은 청록 #173B36 제목, 골드 #9C773B의 작은 구분선. 위쪽에는 큰 제목과 짧은 부제만 두세요. 얼굴 도해에는 눈·코·입·윤곽의 짧은 한글 라벨을 지시선으로 연결하세요. 작은 범례에 격자/지점/곡선을 표시하세요. 아래에는 같은 크기의 제작 3단계 카드를 나란히 두고, 카드마다 같은 가상 얼굴의 작은 3D 도해를 넣으세요. 첫 카드는 보라색 곡면 격자, 둘째는 떠 있는 금빛 지점, 셋째는 지점을 잇는 빛의 곡선을 보여 주세요. 본문은 휴대폰에서 읽기 쉬운 크기로 최소화하세요.',
   '[이미지에 넣을 정확한 글자]\n브랜드: 관상 연구소\n제목: '+ch.name+'\n부제: '+ch.subtitle+' · 선으로 만드는 나의 얼굴 지도\n범례: 격자 / 지점 / 곡선\n카드 1: 격자 — 얼굴의 곡면을 따라\n카드 2: 지점 — 눈·코·입의 위치에 빛\n카드 3: 곡선 — 둥근 호로 이어 보기\n마무리: 내 이야기는 내가 만들어 가요.\n주석: 예술적 도해 · 실측 아님\n안내: 성격·능력·건강·운세를 판단하지 않습니다.\n푸터: '+footer,
   '[피할 표현] 타원 테두리 안에 수평선·점·삼각형 코만 넣은 기초 도형 얼굴, 평평한 도식, 큰 단색 사각형 배경, 지나친 네온, 작은 글씨로 가득한 보고서, 긴 관찰 표, 가짜 수치와 온도 눈금, 실사 인물 사진, 기성 캐릭터·브랜드 모방.',
   limits+' 한글의 오탈자·잘림을 점검하고 도해와 글자가 겹치지 않게 마감하세요. 원고 표·HTML·SVG·PDF 코드를 한 응답에 함께 요청하지 않습니다. 이미지 한 장의 구성과 시각적 완성도에 집중하세요.'
