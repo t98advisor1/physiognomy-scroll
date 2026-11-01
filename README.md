@@ -1,6 +1,6 @@
 # 관상 연구소 — 모바일 조선 캐릭터 탐험
 
-사이트: https://t98advisor1.github.io/physiognomy-scroll/
+사이트: https://kwansang.vercel.app/
 
 첨부된 전체 HTML 앱을 바탕으로 재구성한 모바일 우선 정적 웹앱이다. 수묵 스튜디오, 선택형 카메라 화면 효과, 4문답, 16가지 캐릭터 교지, 도감, 텍스트 공유·복사·인쇄/PDF, 선택형 Gemini 앱 연동을 포함한다. 별도 서버나 API 키 없이 핵심 기능이 작동한다.
 

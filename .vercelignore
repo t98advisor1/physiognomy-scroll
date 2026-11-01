@@ -1,0 +1,9 @@
+원본/
+.vercel/
+.env*
+.git/
+.gitignore
+*.jpg
+*.zip
+배포결과.md
+assets/portrait.png

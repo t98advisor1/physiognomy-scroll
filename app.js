@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
-const SITE = 'https://t98advisor1.github.io/physiognomy-scroll/';
+const SITE = 'https://kwansang.vercel.app/';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const state = {screen:'home', answers:[null,null,null,null], question:0, index:0, sound:false, motion:!reduced.matches, effects:{mesh:true,ink:false,thermal:false}, yaw:0, zoom:1, custom:null};
 const portrait = new Image(); portrait.src = 'assets/portrait.webp';
