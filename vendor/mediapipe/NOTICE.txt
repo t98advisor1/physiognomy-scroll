@@ -1,0 +1,8 @@
+MediaPipe Tasks Vision 1.2.0
+Copyright Google LLC / MediaPipe Authors. Licensed under Apache License 2.0.
+Original licence: LICENSE.txt in this directory.
+Package: https://registry.npmjs.org/@mediapipe/tasks-vision/-/tasks-vision-1.2.0.tgz
+NPM integrity: sha512-7+dr9GbGyTtcuLh11wE5TOn4dNFRncIT9oAWs72620WX99KW5FfzF6rFJ/ChTgXG9vJ6dCiE9FrEEY4CnwPWKQ==
+Official model (float16 version 1): https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+Docs: https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js
+Distributed locally without modification: vision_bundle.js, SIMD/no-SIMD WASM runtime and model.
